@@ -1,0 +1,3 @@
+Installed opencv :
+    conda : conda install -c conda-forge opencv
+    pip : pip install opencv-python
