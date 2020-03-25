@@ -65,7 +65,7 @@ class mixerApp(mw.Ui_MainWindow):
             lambda: self.comboChecker(self.comp1ChoiceComboBox.currentIndex(), 0)
         )
         self.comp2HorizontalSlider.valueChanged.connect(
-            lambda: self.comboChecker(self.comp1ChoiceComboBox.currentIndex(), 0)
+            lambda: self.comboChecker(self.comp2ChoiceComboBox.currentIndex(), 1)
         )
         self.comp1CompoBox.currentIndexChanged.connect(
             lambda: self.comboChecker(self.comp1ChoiceComboBox.currentIndex(), 0)
@@ -99,40 +99,67 @@ class mixerApp(mw.Ui_MainWindow):
             )
         else:
             mode = "phase"
+            otherChoice = self.comboChoice[self.autoSelect(id)].currentIndex()
+            if (choice in [0, 4]) and (otherChoice in [0, 2, 3, 4]):
+                self.comboChoice[self.autoSelect(id)].setCurrentIndex(1)
+            if (choice in [1, 5]) and (otherChoice in [1, 2, 3, 5]):
+                self.comboChoice[self.autoSelect(id)].setCurrentIndex(0)
+
         self.mixCheck(mode)
 
     def mixCheck(self, mode):
-        w1 = self.comp1HorizontalSlider.value()
-        w2 = self.comp2HorizontalSlider.value()
+        w1 = self.comp1HorizontalSlider.value() / 100
+        w2 = self.comp2HorizontalSlider.value() / 100
         choice1 = self.comp1CompoBox.currentIndex()
         choice2 = self.comp2CompoBox.currentIndex()
         component1 = self.comp1ChoiceComboBox.currentIndex()
         component2 = self.comp2ChoiceComboBox.currentIndex()
-        components = []
-
+        img1Components = [..., ...]
+        img2Components = [..., ...]
+        # weight check
+        if choice1 == 1:
+            w1 = 1 - w1
+        if choice2 == 1:
+            w2 = 1 - w2
         # Get components
-        components.append(self.modes[component1](self.fouriers[choice1], "mixer"))
-        components.append(self.modes[component2](self.fouriers[choice1], "mixer"))
-        components.append(self.modes[component1](self.fouriers[choice2], "mixer"))
-        components.append(self.modes[component2](self.fouriers[choice2], "mixer"))
+        img1Components[component1 % 2] = self.modes[component1](
+            self.fouriers[0], "mixer"
+        )
+        img1Components[component2 % 2] = self.modes[component2](
+            self.fouriers[0], "mixer"
+        )
+        img2Components[component1 % 2] = self.modes[component1](
+            self.fouriers[1], "mixer"
+        )
+        img2Components[component2 % 2] = self.modes[component2](
+            self.fouriers[1], "mixer"
+        )
         print("Mixing")
-        output = self.mixer(w1, w2, mode, components)
+        output = self.mixer(w1, w2, mode, img1Components, img2Components)
         self.showImg(self.outputWidgets[self.outputComboBox.currentIndex()], output)
 
-    def mixer(self, weight1, weight2, mode, component):
+    def mixer(self, weight1, weight2, mode, img1Components, img2Components):
         if mode == "phase":
             print("phase mixer")
-            mix = np.multiply(
-                ((weight1 * component[0]) + ((1 - weight1) * component[2])),
-                np.exp2(1j * ((1 - weight2) * component[1]) + (weight2 * component[3])),
+            mix = (
+                (weight1 * img1Components[0]) + ((1 - weight1) * img2Components[0])
+            ) * np.exp(
+                1j
+                * (
+                    ((weight2) * img1Components[1])
+                    + ((1 - weight2) * img2Components[1])
+                )
             )
+
             img = np.fft.ifft2(mix)
             # img = cv.idft(np.float32(mix))
             return np.real(img)
         elif mode == "cmplx":
             print("cmplx mixer")
-            mix = ((weight1 * component[0]) + ((1 - weight1) * component[2])) + 1j * (
-                ((1 - weight2) * component[1]) + (weight2 * component[3])
+            mix = (
+                (weight1 * img1Components[0]) + ((1 - weight1) * img2Components[0])
+            ) + 1j * (
+                ((weight2) * img1Components[1]) + ((1 - weight2) * img2Components[1])
             )
             img = np.fft.ifft2(mix)
             # img = cv.idft(np.float32(mix))
@@ -151,11 +178,11 @@ class mixerApp(mw.Ui_MainWindow):
         widget.setImage(image.T)
         self.scaleImage(widget, image.shape)
 
-    def uniMag(self, dft):
-        return np.ones(dft[:,:,0].shape)
+    def uniMag(self, dft, mode = "mix"):
+        return np.ones(dft[:, :, 0].shape)
 
-    def uniPhase(self, dft):
-        return np.zeros(dft[:,:,1].shape)
+    def uniPhase(self, dft, mode = "mix"):
+        return np.zeros(dft[:, :, 1].shape)
 
     def imgReal(self, dft, mode="show"):
         print("Real")
@@ -172,8 +199,10 @@ class mixerApp(mw.Ui_MainWindow):
             return 20 * np.log(dft[:, :, 1] + self.__epsilon)
 
     def imgPhase(self, dft, mode=None):
-        print("PHase")
-        angle = cv.phase(dft[:, :, 0], dft[:, :, 1])
+        print("Phase")
+        # print(dft[:,:,0])
+        # print(dft[:,:,1])
+        angle = np.angle(dft[:, :, 0] + 1j * dft[:, :, 1])
         return angle
 
     def imgMag(self, dft, mode="show"):
@@ -184,14 +213,14 @@ class mixerApp(mw.Ui_MainWindow):
         """
         print("mag")
         if mode == "mixer":
-            magSpectrum = cv.magnitude(dft[:, :, 0], dft[:, :, 1])
+            magSpectrum = np.abs(dft[:, :, 0] + 1j * dft[:, :, 1])
             return magSpectrum
         else:
             dftShift = np.fft.fftshift(dft)
             print(dftShift.shape)
             # magSpectrum = 20*np.log(cv.magnitude(dftShift[0],dftShift[1]))
             magSpectrum = 20 * np.log(
-                cv.magnitude(dftShift[:, :, 0], dftShift[:, :, 1])
+                np.abs(dftShift[:, :, 0] + 1j * dftShift[:, :, 1])
             )
             return magSpectrum
 
