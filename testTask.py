@@ -12,8 +12,8 @@ from modesEnum import Modes
 from task3Test import Task3Test
 
 # Assign vaild paths to the following 2 variables
-image1Path : str = ""
-image2Path : str = ""
+image1Path : str = "/home/mahdy/Desktop/DSP/sbe309-2020-task3-AMahdy98-1/results/test.jpg"
+image2Path : str = "/home/mahdy/Desktop/DSP/sbe309-2020-task3-AMahdy98-1/results/test2.jpg"
 
 # this format --> 'variable : variableType' is called annotation
 # as you have noticed, python is not a static typed language, so many errors can happen by passing a different type than the expected one to a function
