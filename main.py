@@ -137,7 +137,8 @@ class mixerApp(mw.Ui_MainWindow):
         print("Mixing")
         output = self.images[0].mix(self.images[1],float(w1),float(w2),mode)
         # output = self.mixer(w1, w2, mode, img1Components, img2Components)
-        self.showImg(self.outputWidgets[self.outputComboBox.currentIndex()], output)
+        if output != None:
+            self.showImg(self.outputWidgets[self.outputComboBox.currentIndex()], output)
 
     def mixer(self, weight1, weight2, mode, img1Components, img2Components):
         if mode == "phase":
