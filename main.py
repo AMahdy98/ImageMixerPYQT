@@ -259,6 +259,8 @@ def main():
     :return:
     """
     app = QtWidgets.QApplication(sys.argv)
+    app.setApplicationName("Image Mixer")
+    
     palette = QPalette()
     palette.setColor(QPalette.Window, QColor(53, 53, 53))
     palette.setColor(QPalette.WindowText, Qt.white)

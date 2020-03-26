@@ -517,7 +517,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Image Mixer"))
         self.img1Label.setText(_translate("MainWindow", "Image 1"))
         self.img1ComboBox.setItemText(0, _translate("MainWindow", "FT Magnitude"))
         self.img1ComboBox.setItemText(1, _translate("MainWindow", "FT Phase"))
