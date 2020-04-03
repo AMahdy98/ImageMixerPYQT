@@ -11,7 +11,7 @@ import logging
 
 # logger config.
 logging.basicConfig(
-    filename="/home/mahdy/Desktop/DSP/sbe309-2020-task3-AMahdy98-1/logs.log",
+    filename="logs.log",
     format="%(asctime)s %(message)s",
     filemode="w",
 )
